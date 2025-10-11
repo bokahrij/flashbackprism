@@ -27,6 +27,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Quick StateMachine Svg QuickControls2 Multimedia)
 find_package(Qt6 OPTIONAL_COMPONENTS DBus)
+if (ANDROID)
+    find_package(QT NAMES Qt6 REQUIRED COMPONENTS CorePrivate)
+    find_package(Qt6 OPTIONAL_COMPONENTS CorePrivate)
+endif()
 
 set(ENABLE_FONT_AWESOME ON)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/deps/lqtutils)
@@ -109,9 +113,10 @@ set_target_properties(appFlashbackPrism PROPERTIES
 )
 
 target_link_libraries(appFlashbackPrism PRIVATE
+    Qt6::Core
+    Qt6::Gui
     Qt6::Quick
     Qt6::StateMachine
-    Qt6::CorePrivate
     Qt6::Svg
     Qt6::QuickControls2
     Qt6::Multimedia
@@ -120,6 +125,9 @@ target_link_libraries(appFlashbackPrism PRIVATE
 )
 if (Qt6DBus_FOUND)
     target_link_libraries(appFlashbackPrism PRIVATE Qt6::DBus)
+endif()
+if (ANDROID)
+    target_link_libraries(appFlashbackPrism PRIVATE Qt6::CorePrivate)
 endif()
 
 include(GNUInstallDirs)
