@@ -1,6 +1,6 @@
 name: Build Android APK
 
-# Trigger on push to main, pull requests, or manual trigger
+# Trigger workflow on push to main, pull request, or manual trigger
 on:
   push:
     branches: [ main ]
@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout your repo
+      # Step 1: Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -24,17 +24,18 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      # Step 3: Install Qt for Android
-      - name: Install Qt 6 for Android
-        uses: jurplel/install-qt-action@v3
-        with:
-          version: 6.6.0
-          target: android
-          arch: android_arm64_v8a
-          modules: qtquickcontrols2
-          tools: tools_ifw
+      # Step 3: Install Python packages (aqtinstall)
+      - name: Install aqtinstall
+        run: |
+          python3 -m pip install --upgrade pip aqtinstall
 
-      # Step 4: Install Android SDK & NDK
+      # Step 4: Install Qt desktop + Android
+      - name: Install Qt desktop and Android
+        run: |
+          python3 -m aqt install-qt linux desktop 6.6.0 gcc_64 --outputdir Qt
+          python3 -m aqt install-qt linux android 6.6.0 android_arm64_v8a --outputdir Qt
+
+      # Step 5: Install Android SDK & NDK
       - name: Install Android SDK
         uses: android-actions/setup-android@v3
 
@@ -44,7 +45,7 @@ jobs:
       - name: Install Android NDK
         run: sdkmanager "ndk;25.2.9519653"
 
-      # Step 5: Configure CMake
+      # Step 6: Configure CMake
       - name: Configure CMake
         run: |
           mkdir -p build
@@ -54,15 +55,17 @@ jobs:
             -DANDROID_ABI=arm64-v8a \
             -DANDROID_PLATFORM=android-26
 
-      # Step 6: Build APK
+      # Step 7: Build APK
       - name: Build APK
         run: |
           cd build
           cmake --build . --parallel
 
-      # Step 7: Upload APK artifact
+      # Step 8: Upload APK artifact
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
+          name: FlashbackPrism-APK
+          path: build/**/*.apk        with:
           name: FlashbackPrism-APK
           path: build/**/*.apk
