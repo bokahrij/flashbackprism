@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Android APK2
 
 on:
   push:
@@ -29,19 +29,22 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      # ------------------------------------------------------------------
+      # -------------------------------------------------------------
       # 3️⃣ Install Qt (host + Android)
-      # ------------------------------------------------------------------
+      # -------------------------------------------------------------
       - name: Install Qt
         run: |
           python3 -m pip install --upgrade pip aqtinstall
-          # Host (desktop) Qt – needed for qmake, moc, uic, etc.
-          python3 -m aqt install-qt linux desktop $QT_VERSION gcc_64 --outputdir Qt
-          # Android Qt – request the modules you actually use
-          python3 -m aqt install-qt linux android $QT_VERSION android_arm64_v8a \
-              --outputdir Qt \
-              --components qtdeclarative qtquick qtquickcontrols2 qtbase
 
+          # Host (desktop) Qt – needed for qmake, moc, uic, etc.
+          python3 -m aqt install-qt linux desktop 6.6.0 gcc_64 --outputdir Qt
+
+          # Android Qt – install the default set of modules (qtbase, qtdeclarative, qtquickcontrols2)
+          python3 -m aqt install-qt linux android 6.6.0 android_arm64_v8a --outputdir Qt
+
+      - name: Verify Qt modules
+        run: |
+          ls -R $GITHUB_WORKSPACE/Qt/6.6.0/android_arm64_v8a/lib/cmake | grep Qt6 | head
       # ------------------------------------------------------------------
       # 4️⃣ Install Android SDK/NDK/Build‑tools
       # ------------------------------------------------------------------
