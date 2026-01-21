@@ -6,28 +6,34 @@ on:
   pull_request:
   workflow_dispatch:
 
-# Common values – change only if you need a different Qt/NDK version
+# Shared values – change only if you need a different Qt/NDK version
 env:
   QT_VERSION: "6.6.0"
   NDK_VERSION: "25.2.9519653"
-  BUILD_TOOLS: "33.0.0"          # SDK build‑tools we want to install
+  BUILD_TOOLS: "33.0.0"          # SDK build‑tools to install
 
 jobs:
   build-android:
     runs-on: ubuntu-latest
     steps:
 
-      # ------------------------------ 1️⃣ Checkout ------------------------------
+      # -------------------------------------------------
+      # 1️⃣  Checkout repository
+      # -------------------------------------------------
       - uses: actions/checkout@v4
 
-      # ------------------------------ 2️⃣ Install JDK 17 ------------------------------
+      # -------------------------------------------------
+      # 2️⃣  Install Java 17 (required by the Android SDK)
+      # -------------------------------------------------
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
 
-      # ------------------------------ 3️⃣ Install Qt (desktop + Android) ------------------------------
+      # -------------------------------------------------
+      # 3️⃣  Install Qt (desktop + Android)
+      # -------------------------------------------------
       - name: Install Qt
         run: |
           python3 -m pip install --upgrade pip aqtinstall
@@ -36,12 +42,15 @@ jobs:
           # Android Qt – default set of modules (qtbase, qtdeclarative, qtquickcontrols2)
           python3 -m aqt install-qt linux android $QT_VERSION android_arm64_v8a --outputdir Qt
 
-      # ------------------------------ 4️⃣ Install Android SDK packages & NDK ------------------------------
-      - name: Install Android SDK & NDK
+      # -------------------------------------------------
+      # 4️⃣  Setup Android SDK, accept licences & install packages
+      # -------------------------------------------------
+      - name: Setup Android SDK & install packages
         run: |
-          # The runner already has /usr/local/lib/android/sdk with cmdline-tools
+          # The runner already contains /usr/local/lib/android/sdk
           export ANDROID_SDK_ROOT=/usr/local/lib/android/sdk
-          export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
+          # Make the pre‑installed sdkmanager available in *every* step
+          echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
           echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
           echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
 
@@ -55,14 +64,18 @@ jobs:
                 "build-tools;${{ env.BUILD_TOOLS }}" \
                 "ndk;${{ env.NDK_VERSION }}"
 
-      # ------------------------------ 5️⃣ Verify SDK/NDK installation ------------------------------
+      # -------------------------------------------------
+      # 5️⃣  Verify SDK/NDK installation
+      # -------------------------------------------------
       - name: Verify Android SDK
         run: |
           echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}"
           echo "ANDROID_HOME=${ANDROID_HOME}"
           sdkmanager --list | grep -E "ndk;|platforms;|build-tools;|platform-tools"
 
-      # ------------------------------ 6️⃣ Debug – environment & Qt tree ------------------------------
+      # -------------------------------------------------
+      # 6️⃣  Debug – environment & Qt tree
+      # -------------------------------------------------
       - name: Dump environment (debug)
         run: |
           echo "=== Env ==="
@@ -75,7 +88,9 @@ jobs:
           echo "=== Qt tree ==="
           ls -R $GITHUB_WORKSPACE/Qt/${QT_VERSION}/android_arm64_v8a/lib/cmake | grep Qt6 | head -n 200
 
-      # ------------------------------ 7️⃣ Configure CMake ------------------------------
+      # -------------------------------------------------
+      # 7️⃣  Configure CMake
+      # -------------------------------------------------
       - name: Configure CMake
         run: |
           export QT_HOST_PATH=$GITHUB_WORKSPACE/Qt/${QT_VERSION}/gcc_64
@@ -98,13 +113,17 @@ jobs:
             -DQt6QuickControls2_DIR=$QT_ANDROID_PATH/lib/cmake/Qt6QuickControls2 \
             -DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE=ONLY
 
-      # ------------------------------ 8️⃣ Build APK ------------------------------
+      # -------------------------------------------------
+      # 8️⃣  Build APK
+      # -------------------------------------------------
       - name: Build APK
         run: |
           cd build
           cmake --build . --parallel --target android_package
 
-      # ------------------------------ 9️⃣ Upload APK artifact ------------------------------
+      # -------------------------------------------------
+      # 9️⃣  Upload APK artifact
+      # -------------------------------------------------
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
