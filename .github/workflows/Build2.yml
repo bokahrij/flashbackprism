@@ -39,8 +39,10 @@ jobs:
           python3 -m pip install --upgrade pip aqtinstall
           # Desktop (host) Qt – needed for qmake, moc, uic, …
           python3 -m aqt install-qt linux desktop $QT_VERSION gcc_64 --outputdir Qt
-          # Android Qt – minimal modules (exclude StateMachine)
-          python3 -m aqt install-qt linux android $QT_VERSION android_arm64_v8a --outputdir Qt
+          # Android Qt – include StateMachine module
+          python3 -m aqt install-qt linux android $QT_VERSION android_arm64_v8a \
+            --modules qtbase,qtdeclarative,qtquickcontrols2,statemachine \
+            --outputdir Qt
 
       # -------------------------------------------------
       # 4️⃣  Setup Android SDK, accept licences & install packages
