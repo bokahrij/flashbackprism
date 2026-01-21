@@ -39,12 +39,13 @@ jobs:
       - name: Install Qt
         run: |
           python3 -m pip install --upgrade pip aqtinstall
-          # Desktop (host) Qt – needed for qmake, moc, uic, …
+
+          # Desktop Qt (host tools: moc, rcc, qmake, etc.)
           python3 -m aqt install-qt linux desktop $QT_VERSION gcc_64 --outputdir Qt
-          # Android Qt – only the modules we actually use
-          python3 -m aqt install-qt linux android $QT_VERSION android_arm64_v8a \
-            --outputdir Qt \
-            --modules qtbase,qtdeclarative,qtquickcontrols2
+
+          # Android Qt (DO NOT specify core modules for Qt 6)
+          python3 -m aqt install-qt linux android $QT_VERSION android_arm64_v8a --outputdir Qt
+
 
       # ---------------------------------------------
       # 4️⃣  Prepare Android SDK (pre‑installed on the runner)
