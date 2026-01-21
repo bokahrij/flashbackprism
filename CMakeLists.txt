@@ -25,7 +25,12 @@ project(FlashbackPrism VERSION 1.7.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Quick StateMachine Svg QuickControls2 Multimedia)
+if (ANDROID)
+    find_package(Qt6 REQUIRED COMPONENTS Quick Svg QuickControls2 Multimedia)
+else()
+    find_package(Qt6 REQUIRED COMPONENTS Quick StateMachine Svg QuickControls2 Multimedia)
+endif()
+
 find_package(Qt6 OPTIONAL_COMPONENTS DBus)
 if (ANDROID)
     find_package(QT NAMES Qt6 REQUIRED COMPONENTS CorePrivate)
@@ -116,13 +121,17 @@ target_link_libraries(appFlashbackPrism PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Quick
-    Qt6::StateMachine
     Qt6::Svg
     Qt6::QuickControls2
     Qt6::Multimedia
     lqtutilsplugin
     lqobjectserializer
 )
+
+if (NOT ANDROID)
+    target_link_libraries(appFlashbackPrism PRIVATE Qt6::StateMachine)
+endif()
+
 if (Qt6DBus_FOUND)
     target_link_libraries(appFlashbackPrism PRIVATE Qt6::DBus)
 endif()
