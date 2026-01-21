@@ -56,17 +56,18 @@ jobs:
       # Step 5: Configure CMake
       - name: Configure CMake
         run: |
+          export QT_HOST_PATH=$GITHUB_WORKSPACE/Qt/6.6.0/gcc_64
           mkdir -p build
           cd build
 
           cmake .. \
-           -DCMAKE_BUILD_TYPE=Release \
-           -DCMAKE_TOOLCHAIN_FILE=$ANDROID_SDK_ROOT/ndk/25.2.9519653/build/cmake/android.toolchain.cmake \
-           -DANDROID_ABI=arm64-v8a \
-           -DANDROID_PLATFORM=android-26 \
-           -DCMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/Qt/6.6.0/android_arm64_v8a \
-           -DQt6_DIR=$GITHUB_WORKSPACE/Qt/6.6.0/android_arm64_v8a/lib/cmake/Qt6 \
-           -DQT_HOST_PATH=$GITHUB_WORKSPACE/Qt/6.6.0/gcc_64
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_TOOLCHAIN_FILE=$ANDROID_SDK_ROOT/ndk/25.2.9519653/build/cmake/android.toolchain.cmake \
+          -DANDROID_ABI=arm64-v8a \
+          -DANDROID_PLATFORM=android-26 \
+          -DCMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/Qt/6.6.0/android_arm64_v8a \
+          -DQt6_DIR=$GITHUB_WORKSPACE/Qt/6.6.0/android_arm64_v8a/lib/cmake/Qt6 \
+          -DQt6Quick_DIR=$GITHUB_WORKSPACE/Qt/6.6.0/android_arm64_v8a/lib/cmake/Qt6Quick
             
       # Step 6: Build APK
       - name: Build APK
