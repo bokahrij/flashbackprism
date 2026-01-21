@@ -47,22 +47,28 @@ jobs:
       # -------------------------------------------------
       - name: Setup Android SDK & install packages
         run: |
-          # The runner already contains /usr/local/lib/android/sdk
           export ANDROID_SDK_ROOT=/usr/local/lib/android/sdk
-          # Make the pre‑installed sdkmanager available in *every* step
-          echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
-          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+          export ANDROID_HOME=/usr/local/lib/android/sdk
+      
+          # Make sdkmanager available
+          export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH
+      
           echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
-
-          # Accept all licences
+          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+          echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
+          echo "$ANDROID_SDK_ROOT/platform-tools" >> $GITHUB_PATH
+      
+          # Verify sdkmanager exists BEFORE using it
+          which sdkmanager
+          sdkmanager --version
+      
           yes | sdkmanager --licenses
-
-          # Install the packages we need
+      
           yes | sdkmanager \
-                "platform-tools" \
-                "platforms;android-33" \
-                "build-tools;${{ env.BUILD_TOOLS }}" \
-                "ndk;${{ env.NDK_VERSION }}"
+            "platform-tools" \
+            "platforms;android-33" \
+            "build-tools;${{ env.BUILD_TOOLS }}" \
+            "ndk;${{ env.NDK_VERSION }}"
 
       # -------------------------------------------------
       # 5️⃣  Verify SDK/NDK installation
