@@ -61,6 +61,18 @@ void FPLoginRequest::login(const QUrl& url, const QString& uname, const QString&
     req.setHeader(QNetworkRequest::ContentLengthHeader, inputData.length());
 
     QNetworkReply* reply = m_man->post(req, inputData);
+
+    connect(reply, &QNetworkReply::sslErrors,
+        this,
+        [reply](const QList<QSslError> &errors) {
+            for (const QSslError &err : errors) {
+                qWarning() << "SSL error:" << err.errorString();
+            }
+
+            // TEMPORARY: allow HTTPS to continue, use only for self hosted private servers
+            reply->ignoreSslErrors();
+        });
+    
     connect(reply, &QNetworkReply::finished, this, [this, reply] {
         lqt::AutoExec exec([reply, this] {
             set_working(false);
