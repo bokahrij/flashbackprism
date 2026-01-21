@@ -29,8 +29,7 @@ jobs:
         run: |
           python3 -m pip install --upgrade pip aqtinstall
           # Install desktop Qt
-          python3 -m aqt install-qt linux desktop 6.6.0 gcc_64 --outputdir Qt\
-          --modules qtdeclarative
+          python3 -m aqt install-qt linux desktop 6.6.0 gcc_64 --outputdir Qt
           # Install Android Qt
           python3 -m aqt install-qt linux android 6.6.0 android_arm64_v8a \
           --outputdir Qt \
