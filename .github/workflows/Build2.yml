@@ -113,7 +113,9 @@ jobs:
             -DQT_HOST_PATH=$QT_HOST_PATH \
             -DQt6_DIR=$QT_ANDROID_PATH/lib/cmake/Qt6 \
             -DCMAKE_PREFIX_PATH=$QT_ANDROID_PATH/lib/cmake \
+            -DCMAKE_FIND_ROOT_PATH="$ANDROID_SDK_ROOT/ndk/${NDK_VERSION};$QT_ANDROID_PATH" \
             -DQT_DEBUG_FIND_PACKAGE=ON
+
 
 
 
