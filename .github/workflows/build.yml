@@ -32,7 +32,8 @@ jobs:
           python3 -m aqt install-qt linux desktop 6.6.0 gcc_64 --outputdir Qt
           # Install Android Qt
           python3 -m aqt install-qt linux android 6.6.0 android_arm64_v8a \
-           --outputdir Qt
+            --modules qtdeclarative \
+            --outputdir Qt
 
       # Step 4: Install Android SDK & NDK
       - name: Install Android SDK
