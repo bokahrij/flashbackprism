@@ -1,0 +1,77 @@
+name: Build Android APK 3
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  QT_VERSION: "6.6.0"
+  ANDROID_ABI: "android_arm64_v8a"
+  NDK_VERSION: "25.2.9519653"
+  BUILD_TOOLS: "33.0.0"
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+
+    - uses: actions/checkout@v4
+
+    - name: Install JDK 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: 17
+
+    - name: Install Python and Qt
+      run: |
+        python3 -m pip install --upgrade pip aqtinstall
+        # Install Qt Desktop for host tools
+        python3 -m aqt install-qt linux desktop $QT_VERSION gcc_64 --outputdir Qt
+        # Install Android Qt (no modules list)
+        python3 -m aqt install-qt linux android $QT_VERSION $ANDROID_ABI --outputdir Qt
+
+    - name: Setup Android SDK and NDK
+      run: |
+        export ANDROID_SDK_ROOT=/usr/local/lib/android/sdk
+        export ANDROID_HOME=$ANDROID_SDK_ROOT
+        export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH
+
+        yes | sdkmanager --licenses
+        yes | sdkmanager "platform-tools" \
+                       "platforms;android-33" \
+                       "build-tools;${{ env.BUILD_TOOLS }}" \
+                       "ndk;${{ env.NDK_VERSION }}"
+
+    - name: Configure CMake
+      run: |
+        export QT_HOST_PATH=$GITHUB_WORKSPACE/Qt/${QT_VERSION}/gcc_64
+        export QT_ANDROID_PATH=$GITHUB_WORKSPACE/Qt/${QT_VERSION}/${ANDROID_ABI}
+        export PATH=$QT_HOST_PATH/bin:$PATH
+
+        mkdir build
+        cd build
+
+        cmake .. \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_TOOLCHAIN_FILE=$ANDROID_SDK_ROOT/ndk/${NDK_VERSION}/build/cmake/android.toolchain.cmake \
+          -DANDROID_ABI=${ANDROID_ABI} \
+          -DANDROID_PLATFORM=android-26 \
+          -DQT_HOST_PATH=$QT_HOST_PATH \
+          -DQt6_DIR=$QT_ANDROID_PATH/lib/cmake/Qt6 \
+          -DCMAKE_PREFIX_PATH=$QT_ANDROID_PATH/lib/cmake \
+          -DCMAKE_FIND_ROOT_PATH="$ANDROID_SDK_ROOT/ndk/${NDK_VERSION};$QT_ANDROID_PATH" \
+          -DQT_DEBUG_FIND_PACKAGE=ON
+
+    - name: Build APK
+      run: |
+        cd build
+        cmake --build . --parallel --target android_package
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: My-App-APK
+        path: build/**/*.apk
