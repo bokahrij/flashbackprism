@@ -67,7 +67,9 @@ jobs:
            -DCMAKE_TOOLCHAIN_FILE=$ANDROID_SDK_ROOT/ndk/25.2.9519653/build/cmake/android.toolchain.cmake \
            -DANDROID_ABI=arm64-v8a \
            -DANDROID_PLATFORM=android-26 \
+           -DQT_HOST_PATH=$GITHUB_WORKSPACE/Qt/6.6.0/gcc_64 \
            -DQt6_DIR=$GITHUB_WORKSPACE/Qt/6.6.0/android_arm64_v8a/lib/cmake/Qt6 \
+           -DQt6Core_DIR=$GITHUB_WORKSPACE/Qt/6.6.0/android_arm64_v8a/lib/cmake/Qt6Core \
            -DQt6Quick_DIR=$GITHUB_WORKSPACE/Qt/6.6.0/android_arm64_v8a/lib/cmake/Qt6Quick \
            -DQT_DEBUG_FIND_PACKAGE=ON
             
