@@ -68,7 +68,7 @@ jobs:
         $HOME/Qt/${{ github.event.inputs.qt_version }}/android/bin/androiddeployqt \
           --input android-build/android-libflashbackprism.so-deployment-settings.json \
           --output android-apk \
-          --${{ github.event.inputs.build_type | lower }} \
+          --${{ github.event.inputs.build_type.toLowerCase() }} \
           --sign
 
     - name: Upload Artifacts
