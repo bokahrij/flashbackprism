@@ -65,10 +65,11 @@ jobs:
     - name: Deploy APK
       run: |
         cd android-build
+        BUILD_TYPE=$(echo "${{ github.event.inputs.build_type }}" | tr '[:upper:]' '[:lower:]')
         $HOME/Qt/${{ github.event.inputs.qt_version }}/android/bin/androiddeployqt \
           --input android-build/android-libflashbackprism.so-deployment-settings.json \
           --output android-apk \
-          --${{ github.event.inputs.build_type.toLowerCase() }} \
+          --$BUILD_TYPE \
           --sign
 
     - name: Upload Artifacts
