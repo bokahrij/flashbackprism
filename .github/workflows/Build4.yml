@@ -5,6 +5,27 @@ on:
     branches: [ "main" ]
   pull_request:
   workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Choose build type'
+        required: true
+        default: 'Release'
+        type: choice
+        options:
+          - Release
+          - Debug
+      qt_version:
+        description: 'Qt version to use'
+        required: true
+        default: '6.9.3'
+      android_api:
+        description: 'Android API Level'
+        required: true
+        default: '33'
+      android_ndk:
+        description: 'Android NDK version'
+        required: true
+        default: '25.2.9519653'
 
 jobs:
   build-android:
@@ -17,7 +38,7 @@ jobs:
     - name: Setup Qt Android
       uses: jurplel/install-qt-action@v2
       with:
-        version: "6.9.3"
+        version: ${{ github.event.inputs.qt_version }}
         target: android
 
     - name: Install Android SDK & NDK
@@ -26,13 +47,15 @@ jobs:
         sudo apt install -y zlib1g-dev libc6-dev
         mkdir -p $HOME/Android/Sdk
         export ANDROID_SDK_ROOT=$HOME/Android/Sdk
-        sdkmanager --install "platforms;android-33" "build-tools;33.0.2" "ndk;25.2.9519653"
+        sdkmanager --install "platforms;android-${{ github.event.inputs.android_api }}" \
+                     "build-tools;${{ github.event.inputs.android_api }}.0.2" \
+                     "ndk;${{ github.event.inputs.android_ndk }}"
 
     - name: Configure Build
       run: |
         mkdir android-build
         cd android-build
-        $HOME/Qt/6.9.3/android/bin/qt-cmake ..
+        $HOME/Qt/${{ github.event.inputs.qt_version }}/android/bin/qt-cmake ..
 
     - name: Compile
       run: |
@@ -42,10 +65,11 @@ jobs:
     - name: Deploy APK
       run: |
         cd android-build
-        $HOME/Qt/6.9.3/android/bin/androiddeployqt \
+        $HOME/Qt/${{ github.event.inputs.qt_version }}/android/bin/androiddeployqt \
           --input android-build/android-libflashbackprism.so-deployment-settings.json \
           --output android-apk \
-          --release --sign
+          --${{ github.event.inputs.build_type | lower }} \
+          --sign
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v3
