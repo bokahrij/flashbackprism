@@ -1,4 +1,4 @@
-name: Build Android APK 3
+name: Build Android APK
 
 on:
   push:
@@ -28,14 +28,10 @@ jobs:
     - name: Install Python and Qt
       run: |
         python3 -m pip install --upgrade pip aqtinstall
-        # Install Qt Desktop for host tools
+        # Install host Qt for build tools
         python3 -m aqt install-qt linux desktop $QT_VERSION gcc_64 --outputdir Qt
-        # # Install Android Qt (no modules list)
-        # python3 -m aqt install-qt linux android $QT_VERSION $ANDROID_ABI --outputdir Qt
-        # Install Android Qt with required modules
-        python3 -m aqt install-qt linux android $QT_VERSION $ANDROID_ABI \
-          --outputdir Qt \
-          --modules qtbase,qtdeclarative,qtsvg,qtquickcontrols2,qtmultimedia
+        # Install Android Qt (no --modules!)
+        python3 -m aqt install-qt linux android $QT_VERSION $ANDROID_ABI --outputdir Qt
 
     - name: Setup Android SDK and NDK
       run: |
@@ -55,7 +51,7 @@ jobs:
         export QT_ANDROID_PATH=$GITHUB_WORKSPACE/Qt/${QT_VERSION}/${ANDROID_ABI}
         export PATH=$QT_HOST_PATH/bin:$PATH
 
-        mkdir build
+        mkdir -p build
         cd build
 
         cmake .. \
@@ -64,8 +60,8 @@ jobs:
           -DANDROID_ABI=arm64-v8a \
           -DANDROID_PLATFORM=android-26 \
           -DQT_HOST_PATH=$QT_HOST_PATH \
-          -DQt6_DIR=$QT_ANDROID_PATH/lib/cmake/Qt6
-          -DCMAKE_PREFIX_PATH=$QT_ANDROID_PATH/lib/cmake
+          -DQt6_DIR=$QT_ANDROID_PATH/lib/cmake/Qt6 \
+          -DCMAKE_PREFIX_PATH=$QT_ANDROID_PATH/lib/cmake \
           -DCMAKE_FIND_ROOT_PATH="$ANDROID_SDK_ROOT/ndk/${NDK_VERSION};$QT_ANDROID_PATH" \
           -DQT_DEBUG_FIND_PACKAGE=ON
 
