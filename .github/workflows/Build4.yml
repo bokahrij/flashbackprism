@@ -1,0 +1,54 @@
+name: Build Android APK 4
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Qt Android
+      uses: jurplel/install-qt-action@v2
+      with:
+        version: "6.9.3"
+        target: android
+
+    - name: Install Android SDK & NDK
+      run: |
+        sudo apt update
+        sudo apt install -y zlib1g-dev libc6-dev
+        mkdir -p $HOME/Android/Sdk
+        export ANDROID_SDK_ROOT=$HOME/Android/Sdk
+        sdkmanager --install "platforms;android-33" "build-tools;33.0.2" "ndk;25.2.9519653"
+
+    - name: Configure Build
+      run: |
+        mkdir android-build
+        cd android-build
+        $HOME/Qt/6.9.3/android/bin/qt-cmake ..
+
+    - name: Compile
+      run: |
+        cd android-build
+        make -j$(nproc)
+
+    - name: Deploy APK
+      run: |
+        cd android-build
+        $HOME/Qt/6.9.3/android/bin/androiddeployqt \
+          --input android-build/android-libflashbackprism.so-deployment-settings.json \
+          --output android-apk \
+          --release --sign
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: FlashbackPrism-APK
+        path: android-build/android-apk/*.apk
