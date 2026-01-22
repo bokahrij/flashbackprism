@@ -17,7 +17,7 @@ on:
       qt_version:
         description: 'Qt version to use'
         required: true
-        default: '6.9.3'
+        default: '6.6.4'
       android_api:
         description: 'Android API Level'
         required: true
