@@ -14,10 +14,6 @@ on:
         options:
           - Release
           - Debug
-      qt_version:
-        description: 'Qt version to use'
-        required: true
-        default: '6.6.0'
       android_api:
         description: 'Android API Level'
         required: true
@@ -35,27 +31,47 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Setup Qt Android
-      uses: jurplel/install-qt-action@v2
+    - name: Setup Python
+      uses: actions/setup-python@v4
       with:
-        version: ${{ github.event.inputs.qt_version }}
-        target: android
+        python-version: '3.14'
+
+    - name: Install aqtinstall
+      run: |
+        python3 -m pip install --upgrade pip
+        python3 -m pip install aqtinstall==1.2.5
+
+    - name: Find latest Qt Android version
+      id: listqt
+      run: |
+        AVAILABLE=$(python3 -m aqt list-qt linux android | tr ' ' '\n' | grep '^6\.' | sort -Vr | head -n1)
+        echo "latest_android_qt=$AVAILABLE" >> $GITHUB_OUTPUT
+        echo "Latest Qt for Android: $AVAILABLE"
+
+    - name: Install Qt Android
+      run: |
+        python3 -m aqt install-qt linux android ${{ steps.listqt.outputs.latest_android_qt }} \
+          android_arm64_v8a android_x86_64 android_x86 android_armv7 --autodesktop -O $HOME/Qt
 
     - name: Install Android SDK & NDK
       run: |
         sudo apt update
-        sudo apt install -y zlib1g-dev libc6-dev
+        sudo apt install -y openjdk-11-jdk wget unzip
         mkdir -p $HOME/Android/Sdk
         export ANDROID_SDK_ROOT=$HOME/Android/Sdk
-        sdkmanager --install "platforms;android-${{ github.event.inputs.android_api }}" \
-                     "build-tools;${{ github.event.inputs.android_api }}.0.2" \
-                     "ndk;${{ github.event.inputs.android_ndk }}"
+        wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
+        unzip cmdline-tools.zip -d $HOME/Android/Sdk
+        mv $HOME/Android/Sdk/cmdline-tools $HOME/Android/Sdk/tools
+        yes | $HOME/Android/Sdk/tools/bin/sdkmanager --licenses
+        $HOME/Android/Sdk/tools/bin/sdkmanager "platforms;android-${{ github.event.inputs.android_api }}" \
+                                               "build-tools;${{ github.event.inputs.android_api }}.0.2" \
+                                               "ndk;${{ github.event.inputs.android_ndk }}"
 
     - name: Configure Build
       run: |
         mkdir android-build
         cd android-build
-        $HOME/Qt/${{ github.event.inputs.qt_version }}/android/bin/qt-cmake ..
+        $HOME/Qt/${{ steps.listqt.outputs.latest_android_qt }}/android/bin/qt-cmake ..
 
     - name: Compile
       run: |
@@ -66,7 +82,7 @@ jobs:
       run: |
         cd android-build
         BUILD_TYPE=$(echo "${{ github.event.inputs.build_type }}" | tr '[:upper:]' '[:lower:]')
-        $HOME/Qt/${{ github.event.inputs.qt_version }}/android/bin/androiddeployqt \
+        $HOME/Qt/${{ steps.listqt.outputs.latest_android_qt }}/android/bin/androiddeployqt \
           --input android-build/android-libflashbackprism.so-deployment-settings.json \
           --output android-apk \
           --$BUILD_TYPE \
