@@ -26,6 +26,8 @@ on:
 jobs:
   build-android:
     runs-on: ubuntu-latest
+    env:
+      QT_VERSION: 6.7.3
 
     steps:
     - name: Checkout
@@ -38,29 +40,22 @@ jobs:
 
     - name: Install aqtinstall
       run: |
-       python3 -m pip install --upgrade pip
-       python3 -m pip install --upgrade aqtinstall
-
-    - name: Find latest Qt version
-      id: listqt
-      run: |
-        AVAILABLE=$(python3 -m aqt list-qt linux desktop | tr ' ' '\n' | grep '^6\.' | sort -Vr | head -n1)
-        echo "latest_qt=$AVAILABLE" >> $GITHUB_OUTPUT
-        echo "Latest Qt version: $AVAILABLE"
+        python3 -m pip install --upgrade pip
+        python3 -m pip install --upgrade aqtinstall
 
     - name: Install Qt Desktop (Host Tools)
       run: |
         python3 -m aqt install-qt \
           linux desktop \
-          ${{ steps.listqt.outputs.latest_qt }} \
+          $QT_VERSION \
           gcc_64 \
           --outputdir $HOME/Qt
-          
-    - name: Install Qt Android
+
+    - name: Install Qt Android (Target)
       run: |
         python3 -m aqt install-qt \
           linux android \
-          ${{ steps.listqt.outputs.latest_qt }} \
+          $QT_VERSION \
           android_arm64_v8a \
           --outputdir $HOME/Qt
 
@@ -94,8 +89,8 @@ jobs:
       run: |
         mkdir android-build
         cd android-build
-        $HOME/Qt/${{ steps.listqt.outputs.latest_android_qt }}/android_arm64_v8a/bin/qt-cmake .. \
-          -DQT_HOST_PATH=$HOME/Qt/${{ steps.listqt.outputs.latest_qt }}/gcc_64
+        $HOME/Qt/$QT_VERSION/android_arm64_v8a/bin/qt-cmake .. \
+          -DQT_HOST_PATH=$HOME/Qt/$QT_VERSION/gcc_64
 
     - name: Compile
       run: |
@@ -106,7 +101,7 @@ jobs:
       run: |
         cd android-build
         BUILD_TYPE=$(echo "${{ github.event.inputs.build_type }}" | tr '[:upper:]' '[:lower:]')
-        $HOME/Qt/${{ steps.listqt.outputs.latest_android_qt }}/android_arm64_v8a/bin/androiddeployqt \
+        $HOME/Qt/$QT_VERSION/android_arm64_v8a/bin/androiddeployqt \
           --input android-build/android-libflashbackprism.so-deployment-settings.json \
           --output android-apk \
           --$BUILD_TYPE \
