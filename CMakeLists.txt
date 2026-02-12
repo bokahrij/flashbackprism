@@ -28,7 +28,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if (ANDROID)
     find_package(Qt6 REQUIRED COMPONENTS Quick Svg QuickControls2 Multimedia)
 else()
-    find_package(Qt6 REQUIRED COMPONENTS Quick StateMachine Svg QuickControls2 Multimedia)
+    find_package(Qt6 REQUIRED COMPONENTS Quick Svg QuickControls2 Multimedia)
 endif()
 
 find_package(Qt6 OPTIONAL_COMPONENTS DBus)
@@ -127,10 +127,6 @@ target_link_libraries(appFlashbackPrism PRIVATE
     lqtutilsplugin
     lqobjectserializer
 )
-
-if (NOT ANDROID)
-    target_link_libraries(appFlashbackPrism PRIVATE Qt6::StateMachine)
-endif()
 
 if (Qt6DBus_FOUND)
     target_link_libraries(appFlashbackPrism PRIVATE Qt6::DBus)
