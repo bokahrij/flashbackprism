@@ -48,6 +48,14 @@ jobs:
         echo "latest_android_qt=$AVAILABLE" >> $GITHUB_OUTPUT
         echo "Latest Qt for Android: $AVAILABLE"
 
+    - name: Install Qt Desktop (Host Tools)
+      run: |
+        python3 -m aqt install-qt \
+          linux desktop \
+          ${{ steps.listqt.outputs.latest_android_qt }} \
+          gcc_64 \
+          --outputdir $HOME/Qt
+          
     - name: Install Qt Android
       run: |
        python3 -m aqt install-qt \
@@ -86,7 +94,8 @@ jobs:
       run: |
         mkdir android-build
         cd android-build
-        $HOME/Qt/${{ steps.listqt.outputs.latest_android_qt }}/android_arm64_v8a/bin/qt-cmake ..
+        $HOME/Qt/${{ steps.listqt.outputs.latest_android_qt }}/android_arm64_v8a/bin/qt-cmake .. \
+          -DQT_HOST_PATH=$HOME/Qt/${{ steps.listqt.outputs.latest_android_qt }}/gcc_64
 
     - name: Compile
       run: |
