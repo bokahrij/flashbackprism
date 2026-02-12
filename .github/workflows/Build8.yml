@@ -46,14 +46,14 @@ jobs:
     - name: Set Qt version
       id: listqt
       run: |
-        echo "latest_android_qt=6.6.3" >> $GITHUB_OUTPUT
-        echo "Using Qt version 6.6.3"
+        echo "latest_android_qt=6.5.3" >> $GITHUB_OUTPUT
+        echo "Using Qt version 6.5.3"
 
     - name: Install Qt Host (Linux Desktop)
       run: |
         python3 -m aqt install-qt \
           linux desktop \
-          6.6.3 \
+          6.5.3 \
           gcc_64 \
           --outputdir $HOME/Qt
 
@@ -61,7 +61,7 @@ jobs:
       run: |
         python3 -m aqt install-qt \
           linux android \
-          6.6.3 \
+          6.5.3 \
           android_arm64_v8a \
           --outputdir $HOME/Qt
 
@@ -93,7 +93,7 @@ jobs:
     - name: Detect Qt host path
       id: qthost
       run: |
-        ROOT="$HOME/Qt/6.6.3"
+        ROOT="$HOME/Qt/6.5.3"
         HOST_DIR=$(find "$ROOT" -maxdepth 1 -type d -name "gcc_64" | head -n1)
         echo "host_dir=$HOST_DIR" >> $GITHUB_OUTPUT
 
@@ -104,7 +104,7 @@ jobs:
         echo "Using QT_HOST_PATH=$QT_HOST_PATH"
         mkdir android-build
         cd android-build
-        $HOME/Qt/6.6.3/android_arm64_v8a/bin/qt-cmake \
+        $HOME/Qt/6.5.3/android_arm64_v8a/bin/qt-cmake \
           -DQT_HOST_PATH=$QT_HOST_PATH \
           -DANDROID_SDK_ROOT=$HOME/Android/Sdk \
           -DANDROID_NDK_ROOT=$HOME/Android/Sdk/ndk/${{ github.event.inputs.android_ndk }} \
@@ -119,7 +119,7 @@ jobs:
       run: |
         cd android-build
         BUILD_TYPE=$(echo "${{ github.event.inputs.build_type }}" | tr '[:upper:]' '[:lower:]')
-        $HOME/Qt/6.6.3/android_arm64_v8a/bin/androiddeployqt \
+        $HOME/Qt/6.5.3/android_arm64_v8a/bin/androiddeployqt \
           --input android-libflashbackprism.so-deployment-settings.json \
           --output android-apk \
           --$BUILD_TYPE \
