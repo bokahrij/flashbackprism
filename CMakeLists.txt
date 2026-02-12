@@ -38,14 +38,21 @@ if (ANDROID)
 endif()
 
 set(ENABLE_FONT_AWESOME ON)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/deps/lqtutils/qt6)
+
+# Use the ROOT lqtutils (your fork), not the qt6 test harness
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/deps/lqtutils)
+
+# Keep these as they were (assuming deps are restored as submodules)
 include(${CMAKE_CURRENT_SOURCE_DIR}/deps/lqobjectserializer/LQObjectSerializer/CMakeLists.txt)
+
 set(QTAES_ENABLE_INSTALL OFF)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/deps/qtaes)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/deps)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/deps/lqobjectserializer/LQObjectSerializer)
+
 include(${CMAKE_CURRENT_SOURCE_DIR}/deps/android_openssl/android_openssl.cmake)
+
 
 add_compile_definitions(APP_VERSION="${CMAKE_PROJECT_VERSION}")
 
