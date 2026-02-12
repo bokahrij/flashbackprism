@@ -27,103 +27,96 @@ jobs:
   build-android:
     runs-on: ubuntu-latest
 
-    env:
-      QT_VERSION: "6.6.0"
-      BUILD_TOOLS: "33.0.2"
-
     steps:
-      # -------------------------------- 1️⃣ Checkout --------------------------------
-      - uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v4
 
-      # -------------------------------- 2️⃣ Setup Python --------------------------------
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.14'
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
 
-      # -------------------------------- 3️⃣ Install aqtinstall --------------------------------
-      - name: Install aqtinstall
-        run: |
-          python3 -m pip install --upgrade pip aqtinstall
+    - name: Install aqtinstall
+      run: |
+        python3 -m pip install --upgrade pip
+        python3 -m pip install --upgrade aqtinstall
 
-      # -------------------------------- 4️⃣ Find latest Qt Android version --------------------------------
-      - name: Find latest Qt Android version
-        id: listqt
-        run: |
-          LATEST=$(python3 -m aqt list-qt linux android | tr ' ' '\n' | grep '^6\.' | sort -Vr | head -n1 | awk '{print $1}')
-          echo "latest_android_qt=$LATEST" >> $GITHUB_OUTPUT
-          echo "Latest Qt for Android: $LATEST"
+    - name: Find latest Qt Android version
+      id: listqt
+      run: |
+        AVAILABLE=$(python3 -m aqt list-qt linux android | tr ' ' '\n' | grep '^6\.' | sort -Vr | head -n1)
+        echo "latest_android_qt=$AVAILABLE" >> $GITHUB_OUTPUT
+        echo "Latest Qt for Android: $AVAILABLE"
 
-      # -------------------------------- 5️⃣ Install Qt Android --------------------------------
-      - name: Install Qt Android
-        run: |
-          python3 -m aqt install-qt \
-            linux android \
-            ${{ steps.listqt.outputs.latest_android_qt }} \
-            android_arm64_v8a \
-            --outputdir $HOME/Qt \
-            --modules qtbase,qtdeclarative,qtquickcontrols2
+    - name: Install Qt Host (Linux Desktop)
+      run: |
+        python3 -m aqt install-qt \
+          linux desktop \
+          ${{ steps.listqt.outputs.latest_android_qt }} \
+          gcc_64 \
+          --outputdir $HOME/Qt
 
-      # -------------------------------- 6️⃣ Install Android SDK & NDK --------------------------------
-      - name: Install Android SDK & NDK
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y openjdk-11-jdk wget unzip
+    - name: Install Qt Android
+      run: |
+        python3 -m aqt install-qt \
+          linux android \
+          ${{ steps.listqt.outputs.latest_android_qt }} \
+          android_arm64_v8a \
+          --outputdir $HOME/Qt
 
-          SDK_ROOT=$HOME/Android/Sdk
-          mkdir -p $SDK_ROOT/cmdline-tools
-          cd $SDK_ROOT
-          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-          unzip cmdline-tools.zip
-          mv cmdline-tools latest
-          mv latest cmdline-tools/
+    - name: Install Android SDK & NDK
+      run: |
+        sudo apt update
+        sudo apt install -y openjdk-11-jdk wget unzip
 
-          # Make the SDK available to every step
-          echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> $GITHUB_ENV
-          echo "ANDROID_HOME=$SDK_ROOT" >> $GITHUB_ENV
-          echo "$SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
-          echo "$SDK_ROOT/platform-tools" >> $GITHUB_PATH
+        export ANDROID_SDK_ROOT=$HOME/Android/Sdk
+        mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
 
-          # Add the tools directory to the *current* PATH so that we can use sdkmanager here
-          export PATH="$SDK_ROOT/cmdline-tools/latest/bin:$PATH"
+        cd $ANDROID_SDK_ROOT
+        wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O tools.zip
+        unzip tools.zip
 
-          # Accept licences
-          yes | sdkmanager --licenses
+        mkdir -p cmdline-tools/latest
+        mv cmdline-tools/* cmdline-tools/latest/ 2>/dev/null || true
 
-          # Install the packages we need
-          sdkmanager \
-            "platform-tools" \
-            "platforms;android-${{ github.event.inputs.android_api }}" \
-            "build-tools;${{ env.BUILD_TOOLS }}" \
-            "ndk;${{ github.event.inputs.android_ndk }}"
+        export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
 
-      # -------------------------------- 7️⃣ Configure Build --------------------------------
-      - name: Configure Build
-        run: |
-          mkdir -p android-build
-          cd android-build
-          $HOME/Qt/${{ steps.listqt.outputs.latest_android_qt }}/android_arm64_v8a/bin/qt-cmake .. -DCMAKE_BUILD_TYPE=${{ github.event.inputs.build_type }}
+        yes | sdkmanager --licenses
 
-      # -------------------------------- 8️⃣ Compile --------------------------------
-      - name: Compile
-        run: |
-          cd android-build
-          make -j$(nproc)
+        sdkmanager \
+          "platform-tools" \
+          "platforms;android-${{ github.event.inputs.android_api }}" \
+          "build-tools;${{ github.event.inputs.android_api }}.0.2" \
+          "ndk;${{ github.event.inputs.android_ndk }}"
 
-      # -------------------------------- 9️⃣ Deploy APK --------------------------------
-      - name: Deploy APK
-        run: |
-          cd android-build
-          BUILD_TYPE=$(echo "${{ github.event.inputs.build_type }}" | tr '[:upper:]' '[:lower:]')
-          $HOME/Qt/${{ steps.listqt.outputs.latest_android_qt }}/android_arm64_v8a/bin/androiddeployqt \
-            --input android-libflashbackprism.so-deployment-settings.json \
-            --output android-apk \
-            --$BUILD_TYPE \
-            --sign
+    - name: Configure Build
+      run: |
+        mkdir android-build
+        cd android-build
+        $HOME/Qt/${{ steps.listqt.outputs.latest_android_qt }}/android_arm64_v8a/bin/qt-cmake \
+          -DQT_HOST_PATH=$HOME/Qt/${{ steps.listqt.outputs.latest_android_qt }}/gcc_64 \
+          -DANDROID_SDK_ROOT=$HOME/Android/Sdk \
+          -DANDROID_NDK_ROOT=$HOME/Android/Sdk/ndk/${{ github.event.inputs.android_ndk }} \
+          ..
 
-      # -------------------------------- 🔟 Upload Artifact --------------------------------
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: FlashbackPrism-APK
-          path: android-build/android-apk/*.apk
+    - name: Compile
+      run: |
+        cd android-build
+        make -j$(nproc)
+
+    - name: Deploy APK
+      run: |
+        cd android-build
+        BUILD_TYPE=$(echo "${{ github.event.inputs.build_type }}" | tr '[:upper:]' '[:lower:]')
+
+        $HOME/Qt/${{ steps.listqt.outputs.latest_android_qt }}/android_arm64_v8a/bin/androiddeployqt \
+          --input android-libflashbackprism.so-deployment-settings.json \
+          --output android-apk \
+          --$BUILD_TYPE \
+          --sign
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: FlashbackPrism-APK
+        path: android-build/android-apk/*.apk
