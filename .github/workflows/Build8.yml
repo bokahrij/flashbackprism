@@ -66,24 +66,6 @@ jobs:
           android_arm64_v8a \
           --outputdir $HOME/Qt
 
-    - name: Install Qt Multimedia (Host)
-      run: |
-        python3 -m aqt install-qt \
-          linux desktop \
-          6.6.3 \
-          linux_gcc_64 \
-          --modules qtmultimedia \
-          --outputdir $HOME/Qt
-
-    - name: Install Qt Multimedia (Android)
-      run: |
-        python3 -m aqt install-qt \
-          linux android \
-          6.6.3 \
-          android_arm64_v8a \
-          --modules qtmultimedia \
-          --outputdir $HOME/Qt
-
     - name: Install Android SDK & NDK
       run: |
         sudo apt update
@@ -122,30 +104,4 @@ jobs:
       run: |
         echo "Using QT_HOST_PATH=$QT_HOST_PATH"
         mkdir android-build
-        cd android-build
-        $HOME/Qt/6.6.3/android_arm64_v8a/bin/qt-cmake \
-          -DQT_HOST_PATH=$QT_HOST_PATH \
-          -DANDROID_SDK_ROOT=$HOME/Android/Sdk \
-          -DANDROID_NDK_ROOT=$HOME/Android/Sdk/ndk/${{ github.event.inputs.android_ndk }} \
-          ..
-
-    - name: Compile
-      run: |
-        cd android-build
-        make -j$(nproc)
-
-    - name: Deploy APK
-      run: |
-        cd android-build
-        BUILD_TYPE=$(echo "${{ github.event.inputs.build_type }}" | tr '[:upper:]' '[:lower:]')
-        $HOME/Qt/6.6.3/android_arm64_v8a/bin/androiddeployqt \
-          --input android-libflashbackprism.so-deployment-settings.json \
-          --output android-apk \
-          --$BUILD_TYPE \
-          --sign
-
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: FlashbackPrism-APK
-        path: android-build/android-apk/*.apk
+        cd
