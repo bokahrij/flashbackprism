@@ -58,17 +58,28 @@ jobs:
 
     - name: Install Android SDK & NDK
       run: |
-        sudo apt update
-        sudo apt install -y openjdk-11-jdk wget unzip
-        mkdir -p $HOME/Android/Sdk
-        export ANDROID_SDK_ROOT=$HOME/Android/Sdk
-        wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-        unzip cmdline-tools.zip -d $HOME/Android/Sdk
-        mv $HOME/Android/Sdk/cmdline-tools $HOME/Android/Sdk/tools
-        yes | $HOME/Android/Sdk/tools/bin/sdkmanager --licenses
-        $HOME/Android/Sdk/tools/bin/sdkmanager "platforms;android-${{ github.event.inputs.android_api }}" \
-                                               "build-tools;${{ github.event.inputs.android_api }}.0.2" \
-                                               "ndk;${{ github.event.inputs.android_ndk }}"
+       sudo apt update
+       sudo apt install -y openjdk-11-jdk wget unzip
+
+       mkdir -p $HOME/Android/Sdk/cmdline-tools
+       cd $HOME/Android/Sdk
+
+       wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
+       unzip cmdline-tools.zip
+
+       # Move into required "latest" folder
+       mv cmdline-tools latest
+       mv latest cmdline-tools/
+
+       export ANDROID_SDK_ROOT=$HOME/Android/Sdk
+       export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
+
+       yes | sdkmanager --licenses
+
+       sdkmanager "platform-tools" \
+               "platforms;android-${{ github.event.inputs.android_api }}" \
+               "build-tools;${{ github.event.inputs.android_api }}.0.2" \
+               "ndk;${{ github.event.inputs.android_ndk }}"
 
     - name: Configure Build
       run: |
