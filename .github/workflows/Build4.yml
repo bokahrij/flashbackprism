@@ -26,8 +26,6 @@ on:
 jobs:
   build-android:
     runs-on: ubuntu-latest
-    env:
-      QT_VERSION: 6.7.3
 
     steps:
     - name: Checkout
@@ -43,11 +41,18 @@ jobs:
         python3 -m pip install --upgrade pip
         python3 -m pip install --upgrade aqtinstall
 
+    - name: Find latest Qt 6.7.x version
+      id: listqt
+      run: |
+        AVAILABLE=$(python3 -m aqt list-qt linux desktop | grep '^6\.7' | sort -Vr | head -n1)
+        echo "latest_qt=$AVAILABLE" >> $GITHUB_OUTPUT
+        echo "Latest Qt 6.7.x: $AVAILABLE"
+
     - name: Install Qt Desktop (Host Tools)
       run: |
         python3 -m aqt install-qt \
           linux desktop \
-          $QT_VERSION \
+          ${{ steps.listqt.outputs.latest_qt }} \
           gcc_64 \
           --outputdir $HOME/Qt
 
@@ -55,7 +60,7 @@ jobs:
       run: |
         python3 -m aqt install-qt \
           linux android \
-          $QT_VERSION \
+          ${{ steps.listqt.outputs.latest_qt }} \
           android_arm64_v8a \
           --outputdir $HOME/Qt
 
@@ -89,8 +94,8 @@ jobs:
       run: |
         mkdir android-build
         cd android-build
-        $HOME/Qt/$QT_VERSION/android_arm64_v8a/bin/qt-cmake .. \
-          -DQT_HOST_PATH=$HOME/Qt/$QT_VERSION/gcc_64
+        $HOME/Qt/${{ steps.listqt.outputs.latest_qt }}/android_arm64_v8a/bin/qt-cmake .. \
+          -DQT_HOST_PATH=$HOME/Qt/${{ steps.listqt.outputs.latest_qt }}/gcc_64
 
     - name: Compile
       run: |
@@ -101,7 +106,7 @@ jobs:
       run: |
         cd android-build
         BUILD_TYPE=$(echo "${{ github.event.inputs.build_type }}" | tr '[:upper:]' '[:lower:]')
-        $HOME/Qt/$QT_VERSION/android_arm64_v8a/bin/androiddeployqt \
+        $HOME/Qt/${{ steps.listqt.outputs.latest_qt }}/android_arm64_v8a/bin/androiddeployqt \
           --input android-build/android-libflashbackprism.so-deployment-settings.json \
           --output android-apk \
           --$BUILD_TYPE \
