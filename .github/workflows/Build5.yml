@@ -53,8 +53,9 @@ jobs:
         python3 -m aqt install-qt \
           linux desktop \
           ${{ steps.listqt.outputs.latest_android_qt }} \
-          gcc_64 \
+          linux_gcc_64 \
           --outputdir $HOME/Qt
+
 
     - name: Install Qt Android
       run: |
