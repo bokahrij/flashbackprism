@@ -26,23 +26,24 @@ on:
 jobs:
   build-android:
     runs-on: ubuntu-latest
+
     steps:
-      # -------------------------------- 1️⃣  Checkout --------------------------------
+      # -------------------------------- 1️⃣  Checkout ------------------------------
       - uses: actions/checkout@v4
 
-      # -------------------------------- 2️⃣  Setup Python --------------------------------
+      # -------------------------------- 2️⃣  Setup Python ------------------------------
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.14'
 
-      # -------------------------------- 3️⃣  Install aqtinstall --------------------------------
+      # -------------------------------- 3️⃣  Install aqtinstall ------------------------------
       - name: Install aqtinstall
         run: |
           python3 -m pip install --upgrade pip
           python3 -m pip install --upgrade aqtinstall
 
-      # -------------------------------- 4️⃣  Find latest Qt Android version --------------------------------
+      # -------------------------------- 4️⃣  Find latest Qt Android version ------------------------------
       - name: Find latest Qt Android version
         id: listqt
         run: |
@@ -50,7 +51,7 @@ jobs:
           echo "latest_android_qt=$AVAILABLE" >> $GITHUB_OUTPUT
           echo "Latest Qt for Android: $AVAILABLE"
 
-      # -------------------------------- 5️⃣  Install Qt Android --------------------------------
+      # -------------------------------- 5️⃣  Install Qt Android ------------------------------
       - name: Install Qt Android
         run: |
           python3 -m aqt install-qt \
@@ -59,11 +60,11 @@ jobs:
             android_arm64_v8a \
             --outputdir $HOME/Qt
 
-      # -------------------------------- 6️⃣  Install Android SDK & NDK --------------------------------
+      # -------------------------------- 6️⃣  Install Android SDK & NDK ------------------------------
       - name: Install Android SDK & NDK
         run: |
-          sudo apt update
-          sudo apt install -y openjdk-11-jdk wget unzip
+          sudo apt-get update
+          sudo apt-get install -y openjdk-11-jdk wget unzip
 
           # Create SDK root and download command‑line tools
           SDK_ROOT=$HOME/Android/Sdk
@@ -72,7 +73,7 @@ jobs:
           wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
           unzip cmdline-tools.zip
           mv cmdline-tools latest
-          mv latest cmdline-tools/      # create the required “latest” folder
+          mv latest cmdline-tools/          # create the required “latest” folder
 
           # Make the SDK available to every step
           echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> $GITHUB_ENV
@@ -90,20 +91,20 @@ jobs:
             "build-tools;${{ github.event.inputs.android_api }}.0.2" \
             "ndk;${{ github.event.inputs.android_ndk }}"
 
-      # -------------------------------- 7️⃣  Configure Build --------------------------------
+      # -------------------------------- 7️⃣  Configure Build ------------------------------
       - name: Configure Build
         run: |
           mkdir -p android-build
           cd android-build
           $HOME/Qt/${{ steps.listqt.outputs.latest_android_qt }}/android_arm64_v8a/bin/qt-cmake ..
 
-      # -------------------------------- 8️⃣  Compile --------------------------------
+      # -------------------------------- 8️⃣  Compile ------------------------------
       - name: Compile
         run: |
           cd android-build
           make -j$(nproc)
 
-      # -------------------------------- 9️⃣  Deploy APK --------------------------------
+      # -------------------------------- 9️⃣  Deploy APK ------------------------------
       - name: Deploy APK
         run: |
           cd android-build
@@ -114,7 +115,7 @@ jobs:
             --$BUILD_TYPE \
             --sign
 
-      # -------------------------------- 🔟  Upload Artifact --------------------------------
+      # -------------------------------- 🔟  Upload Artifact ------------------------------
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
