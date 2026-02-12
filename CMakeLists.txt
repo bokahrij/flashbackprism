@@ -38,7 +38,7 @@ if (ANDROID)
 endif()
 
 set(ENABLE_FONT_AWESOME ON)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/deps/lqtutils)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/deps/lqtutils/qt6)
 include(${CMAKE_CURRENT_SOURCE_DIR}/deps/lqobjectserializer/LQObjectSerializer/CMakeLists.txt)
 set(QTAES_ENABLE_INSTALL OFF)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/deps/qtaes)
