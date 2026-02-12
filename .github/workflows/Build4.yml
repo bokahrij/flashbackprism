@@ -50,10 +50,10 @@ jobs:
 
     - name: Install Qt Android
       run: |
-        python3 -m aqt install linux android \
-        ${{ steps.listqt.outputs.latest_android_qt }} \
-        android_arm64_v8a \
-        --outputdir $HOME/Qt
+       python3 -m aqt install \
+       ${{ steps.listqt.outputs.latest_android_qt }} \
+       linux android android_arm64_v8a \
+       --outputdir $HOME/Qt
 
     - name: Install Android SDK & NDK
       run: |
