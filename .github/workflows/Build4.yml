@@ -41,28 +41,28 @@ jobs:
        python3 -m pip install --upgrade pip
        python3 -m pip install --upgrade aqtinstall
 
-    - name: Find latest Qt Android version
+    - name: Find latest Qt version
       id: listqt
       run: |
-        AVAILABLE=$(python3 -m aqt list-qt linux android | tr ' ' '\n' | grep '^6\.' | sort -Vr | head -n1)
-        echo "latest_android_qt=$AVAILABLE" >> $GITHUB_OUTPUT
-        echo "Latest Qt for Android: $AVAILABLE"
+        AVAILABLE=$(python3 -m aqt list-qt linux desktop | tr ' ' '\n' | grep '^6\.' | sort -Vr | head -n1)
+        echo "latest_qt=$AVAILABLE" >> $GITHUB_OUTPUT
+        echo "Latest Qt version: $AVAILABLE"
 
     - name: Install Qt Desktop (Host Tools)
       run: |
         python3 -m aqt install-qt \
           linux desktop \
-          ${{ steps.listqt.outputs.latest_android_qt }} \
+          ${{ steps.listqt.outputs.latest_qt }} \
           gcc_64 \
           --outputdir $HOME/Qt
           
     - name: Install Qt Android
       run: |
-       python3 -m aqt install-qt \
-       linux android \
-       ${{ steps.listqt.outputs.latest_android_qt }} \
-       android_arm64_v8a \
-       --outputdir $HOME/Qt
+        python3 -m aqt install-qt \
+          linux android \
+          ${{ steps.listqt.outputs.latest_qt }} \
+          android_arm64_v8a \
+          --outputdir $HOME/Qt
 
     - name: Install Android SDK & NDK
       run: |
@@ -95,7 +95,7 @@ jobs:
         mkdir android-build
         cd android-build
         $HOME/Qt/${{ steps.listqt.outputs.latest_android_qt }}/android_arm64_v8a/bin/qt-cmake .. \
-          -DQT_HOST_PATH=$HOME/Qt/${{ steps.listqt.outputs.latest_android_qt }}/gcc_64
+          -DQT_HOST_PATH=$HOME/Qt/${{ steps.listqt.outputs.latest_qt }}/gcc_64
 
     - name: Compile
       run: |
