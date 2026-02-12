@@ -38,8 +38,8 @@ jobs:
 
     - name: Install aqtinstall
       run: |
-        python3 -m pip install --upgrade pip
-        python3 -m pip install aqtinstall==1.2.5
+       python3 -m pip install --upgrade pip
+       python3 -m pip install --upgrade aqtinstall
 
     - name: Find latest Qt Android version
       id: listqt
@@ -50,9 +50,10 @@ jobs:
 
     - name: Install Qt Android
       run: |
-       python3 -m aqt install \
+       python3 -m aqt install-qt \
+       linux android \
        ${{ steps.listqt.outputs.latest_android_qt }} \
-       linux android android_arm64_v8a \
+       android_arm64_v8a \
        --outputdir $HOME/Qt
 
     - name: Install Android SDK & NDK
