@@ -1,6 +1,3 @@
-[submodule "deps/lqtutils"]
-	path = deps/lqtutils
-	url = https://github.com/bokahrij/lqtutils.git
 [submodule "deps/lqobjectserializer"]
 	path = deps/lqobjectserializer
 	url = https://github.com/carlonluca/lqobjectserializer.git
