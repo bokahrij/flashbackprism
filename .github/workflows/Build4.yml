@@ -50,9 +50,10 @@ jobs:
 
     - name: Install Qt Android
       run: |
-        python3 -m aqt install 6.6.0 linux android \
-          --arch android_arm64_v8a \
-          --outputdir $HOME/Qt
+        python3 -m aqt install linux android \
+        ${{ steps.listqt.outputs.latest_android_qt }} \
+        android_arm64_v8a \
+        --outputdir $HOME/Qt
 
     - name: Install Android SDK & NDK
       run: |
@@ -72,7 +73,7 @@ jobs:
       run: |
         mkdir android-build
         cd android-build
-        $HOME/Qt/${{ steps.listqt.outputs.latest_android_qt }}/android/bin/qt-cmake ..
+        $HOME/Qt/${{ steps.listqt.outputs.latest_android_qt }}/android_arm64_v8a/bin/qt-cmake ..
 
     - name: Compile
       run: |
@@ -83,7 +84,7 @@ jobs:
       run: |
         cd android-build
         BUILD_TYPE=$(echo "${{ github.event.inputs.build_type }}" | tr '[:upper:]' '[:lower:]')
-        $HOME/Qt/${{ steps.listqt.outputs.latest_android_qt }}/android/bin/androiddeployqt \
+        $HOME/Qt/${{ steps.listqt.outputs.latest_android_qt }}/android_arm64_v8a/bin/androiddeployqt \
           --input android-build/android-libflashbackprism.so-deployment-settings.json \
           --output android-apk \
           --$BUILD_TYPE \
