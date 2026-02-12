@@ -67,23 +67,24 @@ jobs:
           android_arm64_v8a \
           --outputdir $HOME/Qt
 
-    - name: Install Qt Multimedia (Host)
+    - name: Install Qt modules (Host)
       run: |
         python3 -m aqt install-qt \
           linux desktop \
           ${{ steps.listqt.outputs.latest_android_qt }} \
           linux_gcc_64 \
-          --modules qtmultimedia \
+          --modules qtmultimedia qtstatemachine \
           --outputdir $HOME/Qt
 
-    - name: Install Qt Multimedia (Android)
+    - name: Install Qt modules (Android)
       run: |
         python3 -m aqt install-qt \
           linux android \
           ${{ steps.listqt.outputs.latest_android_qt }} \
           android_arm64_v8a \
-          --modules qtmultimedia \
+          --modules qtmultimedia qtstatemachine \
           --outputdir $HOME/Qt
+
 
     - name: Install Android SDK & NDK
       run: |
