@@ -49,7 +49,9 @@ set(QTAES_ENABLE_INSTALL OFF)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/deps/qtaes)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/deps)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/deps/lqtutils)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/deps/lqobjectserializer/LQObjectSerializer)
+
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/deps/android_openssl/android_openssl.cmake)
 
