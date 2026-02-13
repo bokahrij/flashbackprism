@@ -119,7 +119,8 @@ jobs:
           "platform-tools" \
           "platforms;android-${{ github.event.inputs.android_api }}" \
           "build-tools;${{ github.event.inputs.android_api }}.0.2" \
-          "ndk;${{ github.event.inputs.android_ndk }}"
+          "ndk;26.1.10909125"
+
 
     - name: Detect Qt host path
       id: qthost
