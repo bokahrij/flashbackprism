@@ -40,6 +40,7 @@
 #include <lqtutils_string.h>
 
 #include "fpphotoprovider.h"
+#include "fpdownloader.h"
 #include "fpqmlutils.h"
 
 inline QImage load_data_with_proper_orientation(QByteArray& data)
@@ -59,33 +60,6 @@ FPPhotoResponse::FPPhotoResponse(const QString& hash, const QSize& requestedSize
     emit imageDownloadProgress(hash, 0, 0);
 
     m_downloader = new FPDownloader(FPQmlUtils::photoUrl(hash), &m_data, this);
-
-    // --- BEGIN SSL FIX FOR SELF-SIGNED CERTS ---
-    // Try to hook into reply creation if lqt::Downloader exposes it
-    connect(m_downloader, &lqt::Downloader::replyCreated,
-            this, [](QNetworkReply* reply) {
-        QObject::connect(reply, &QNetworkReply::sslErrors,
-                         reply, [reply](const QList<QSslError> &errors) {
-            qWarning() << "Ignoring SSL errors for self-signed certificate:" << errors;
-            reply->ignoreSslErrors();
-        });
-    });
-
-    // Fallback: if replyCreated doesn't exist, hook when downloading starts
-    connect(m_downloader, &lqt::Downloader::stateChanged,
-            this, [this](LQTDownloaderState state) {
-        if (state == LQTDownloaderState::S_DOWNLOADING) {
-            QNetworkReply* reply = m_downloader->reply();
-            if (reply) {
-                QObject::connect(reply, &QNetworkReply::sslErrors,
-                                 reply, [reply](const QList<QSslError> &errors) {
-                    qWarning() << "Ignoring SSL errors for self-signed certificate:" << errors;
-                    reply->ignoreSslErrors();
-                });
-            }
-        }
-    });
-    // --- END SSL FIX ---
 
     connect(m_downloader, &lqt::Downloader::stateChanged, this, [this, hash] {
         switch (m_downloader->state()) {
