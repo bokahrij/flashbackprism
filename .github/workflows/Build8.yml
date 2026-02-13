@@ -32,6 +32,9 @@ jobs:
       uses: actions/checkout@v4
       with:
         submodules: recursive
+        fetch-depth: 0
+        clean: true
+
 
     - name: Setup Python
       uses: actions/setup-python@v4
@@ -43,26 +46,53 @@ jobs:
         python3 -m pip install --upgrade pip
         python3 -m pip install --upgrade aqtinstall
 
-    - name: Set Qt version
+    - name: Find latest Qt Android version
       id: listqt
       run: |
-        echo "latest_android_qt=6.4.3" >> $GITHUB_OUTPUT
-        echo "Using Qt version 6.4.3"
+        AVAILABLE=$(python3 -m aqt list-qt linux android | grep -E '^6\.[0-9]+\.[0-9]+$' | sort -Vr | head -n1)
+        echo "latest_android_qt=$AVAILABLE" >> $GITHUB_OUTPUT
+        echo "Latest Qt for Android: $AVAILABLE"
 
+
+  
     - name: Install Qt Host (Linux Desktop)
       run: |
         python3 -m aqt install-qt \
           linux desktop \
-          6.4.3 \
-          gcc_64 \
+          ${{ steps.listqt.outputs.latest_android_qt }} \
+          linux_gcc_64 \
           --outputdir $HOME/Qt
 
     - name: Install Qt Android
       run: |
         python3 -m aqt install-qt \
           linux android \
-          6.4.3 \
+          ${{ steps.listqt.outputs.latest_android_qt }} \
           android_arm64_v8a \
+          --outputdir $HOME/Qt
+
+    - name: Debug Qt install
+      run: |
+        echo "Installed Qt versions:"
+        ls $HOME/Qt
+
+
+    - name: Install Qt Multimedia (Host)
+      run: |
+        python3 -m aqt install-qt \
+          linux desktop \
+          ${{ steps.listqt.outputs.latest_android_qt }} \
+          linux_gcc_64 \
+          --modules qtmultimedia \
+          --outputdir $HOME/Qt
+
+    - name: Install Qt Multimedia (Android)
+      run: |
+        python3 -m aqt install-qt \
+          linux android \
+          ${{ steps.listqt.outputs.latest_android_qt }} \
+          android_arm64_v8a \
+          --modules qtmultimedia \
           --outputdir $HOME/Qt
 
     - name: Install Android SDK & NDK
@@ -93,8 +123,8 @@ jobs:
     - name: Detect Qt host path
       id: qthost
       run: |
-        ROOT="$HOME/Qt/6.4.3"
-        HOST_DIR=$(find "$ROOT" -maxdepth 1 -type d -name "gcc_64" | head -n1)
+        ROOT="$HOME/Qt/${{ steps.listqt.outputs.latest_android_qt }}"
+        HOST_DIR=$(find "$ROOT" -maxdepth 1 -type d \( -name "gcc_64" -o -name "linux_gcc_64" \) | head -n1)
         echo "host_dir=$HOST_DIR" >> $GITHUB_OUTPUT
 
     - name: Configure Build
@@ -104,7 +134,7 @@ jobs:
         echo "Using QT_HOST_PATH=$QT_HOST_PATH"
         mkdir android-build
         cd android-build
-        $HOME/Qt/6.4.3/android_arm64_v8a/bin/qt-cmake \
+        $HOME/Qt/${{ steps.listqt.outputs.latest_android_qt }}/android_arm64_v8a/bin/qt-cmake \
           -DQT_HOST_PATH=$QT_HOST_PATH \
           -DANDROID_SDK_ROOT=$HOME/Android/Sdk \
           -DANDROID_NDK_ROOT=$HOME/Android/Sdk/ndk/${{ github.event.inputs.android_ndk }} \
@@ -119,12 +149,13 @@ jobs:
       run: |
         cd android-build
         BUILD_TYPE=$(echo "${{ github.event.inputs.build_type }}" | tr '[:upper:]' '[:lower:]')
-        $HOME/Qt/6.4.3/android_arm64_v8a/bin/androiddeployqt \
+        $HOME/Qt/${{ steps.listqt.outputs.latest_android_qt }}/android_arm64_v8a/bin/androiddeployqt \
           --input android-libflashbackprism.so-deployment-settings.json \
           --output android-apk \
           --$BUILD_TYPE \
           --sign
 
+        
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
