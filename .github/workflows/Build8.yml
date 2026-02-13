@@ -157,4 +157,5 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: FlashbackPrism-APK
-        path: android-build/android-apk/*.apk
+        path: android-build/android-build/build/outputs/apk/debug/*.apk
+
