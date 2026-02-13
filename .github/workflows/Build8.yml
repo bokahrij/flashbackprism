@@ -139,7 +139,7 @@ jobs:
         $HOME/Qt/${{ steps.listqt.outputs.latest_android_qt }}/android_arm64_v8a/bin/qt-cmake \
           -DQT_HOST_PATH=$QT_HOST_PATH \
           -DANDROID_SDK_ROOT=$HOME/Android/Sdk \
-          -DANDROID_NDK_ROOT=$HOME/Android/Sdk/ndk/${{ github.event.inputs.android_ndk }} \
+          -DANDROID_NDK_ROOT=$HOME/Android/Sdk/ndk/26.1.10909125 \
           ..
 
     - name: Compile
