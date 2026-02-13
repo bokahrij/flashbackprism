@@ -1,4 +1,6 @@
-# FlashbackPrism
+# FlashbackPrism SSL Self Signed
+This fork lets you use self signed certificates on your own server and allows a specific port for https, ie https://mydomain:3232.
+
 This is a small client for [PhotoPrism](https://github.com/photoprism/photoprism) written in Qt. Its only purpose is to show the photos taken years ago in the same date as today. This is an interesting way to review the photos from your collection. PhotoPrism seems to lack this feature in a way that is comfortable for me, so I took some time to implement it, waiting for an official implementation.
 
 The application includes a GUI to browse the photos in previous years, open them and share. It also includes code monitoring the PhotoPrism server for changes and sending a notification approximately at 8am if new photos are available. In Linux, the notification only arrives when the app is running. In Android, the application includes a service, so it should work even after the application is closed.
