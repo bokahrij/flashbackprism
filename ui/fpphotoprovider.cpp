@@ -59,6 +59,34 @@ FPPhotoResponse::FPPhotoResponse(const QString& hash, const QSize& requestedSize
     emit imageDownloadProgress(hash, 0, 0);
 
     m_downloader = new lqt::Downloader(FPQmlUtils::photoUrl(hash), &m_data);
+
+    // --- BEGIN SSL FIX FOR SELF-SIGNED CERTS ---
+    // Try to hook into reply creation if lqt::Downloader exposes it
+    connect(m_downloader, &lqt::Downloader::replyCreated,
+            this, [](QNetworkReply* reply) {
+        QObject::connect(reply, &QNetworkReply::sslErrors,
+                         reply, [reply](const QList<QSslError> &errors) {
+            qWarning() << "Ignoring SSL errors for self-signed certificate:" << errors;
+            reply->ignoreSslErrors();
+        });
+    });
+
+    // Fallback: if replyCreated doesn't exist, hook when downloading starts
+    connect(m_downloader, &lqt::Downloader::stateChanged,
+            this, [this](LQTDownloaderState state) {
+        if (state == LQTDownloaderState::S_DOWNLOADING) {
+            QNetworkReply* reply = m_downloader->reply();
+            if (reply) {
+                QObject::connect(reply, &QNetworkReply::sslErrors,
+                                 reply, [reply](const QList<QSslError> &errors) {
+                    qWarning() << "Ignoring SSL errors for self-signed certificate:" << errors;
+                    reply->ignoreSslErrors();
+                });
+            }
+        }
+    });
+    // --- END SSL FIX ---
+
     connect(m_downloader, &lqt::Downloader::stateChanged, this, [this, hash] {
         switch (m_downloader->state()) {
         case LQTDownloaderState::S_IDLE:
@@ -80,11 +108,15 @@ FPPhotoResponse::FPPhotoResponse(const QString& hash, const QSize& requestedSize
             return;
         }
     });
-    connect(m_downloader, &lqt::Downloader::downloadProgress, this, [this, hash] (quint64 downloaded, quint64 total) {
+
+    connect(m_downloader, &lqt::Downloader::downloadProgress,
+            this, [this, hash] (quint64 downloaded, quint64 total) {
         emit imageDownloadProgress(hash, downloaded, total);
     });
+
     m_downloader->download();
 }
+
 
 FPPhotoResponse::~FPPhotoResponse()
 {
