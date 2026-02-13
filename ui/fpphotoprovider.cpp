@@ -40,7 +40,6 @@
 #include <lqtutils_string.h>
 
 #include "fpphotoprovider.h"
-#include "fpdownloader.h"
 #include "fpqmlutils.h"
 
 inline QImage load_data_with_proper_orientation(QByteArray& data)
@@ -59,7 +58,7 @@ FPPhotoResponse::FPPhotoResponse(const QString& hash, const QSize& requestedSize
 {
     emit imageDownloadProgress(hash, 0, 0);
 
-    m_downloader = new FPDownloader(FPQmlUtils::photoUrl(hash), &m_data, this);
+   m_downloader = new lqt::Downloader(FPQmlUtils::photoUrl(hash), &m_data);
 
     connect(m_downloader, &lqt::Downloader::stateChanged, this, [this, hash] {
         switch (m_downloader->state()) {

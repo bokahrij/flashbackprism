@@ -113,6 +113,15 @@ int main(int argc, char** argv)
     qputenv("QT_QUICK_CONTROLS_MATERIAL_ACCENT", QByteArray("Purple"));
 
     QGuiApplication app(argc, argv);
+
+    // --- BEGIN SSL FIX ---
+    QSslConfiguration sslConfig = QSslConfiguration::defaultConfiguration();
+    sslConfig.setPeerVerifyMode(QSslSocket::VerifyNone);
+    sslConfig.setProtocol(QSsl::AnyProtocol);
+    QSslConfiguration::setDefaultConfiguration(sslConfig);
+    // --- END SSL FIX ---
+
+    
     app.setOrganizationName(QSL("Luca Carlon"));
     app.setOrganizationDomain(QSL("org.duckdns.bugfreeblog"));
     app.setApplicationName(QSL("FlashbackPrism"));
