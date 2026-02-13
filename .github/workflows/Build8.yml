@@ -159,3 +159,14 @@ jobs:
         name: FlashbackPrism-APK
         path: android-build/android-build/build/outputs/apk/debug/*.apk
 
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ github.run_number }}
+        name: FlashbackPrism Build ${{ github.run_number }}
+        draft: false
+        prerelease: false
+        files: |
+          android-build/android-build/build/outputs/apk/**/*.apk
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
