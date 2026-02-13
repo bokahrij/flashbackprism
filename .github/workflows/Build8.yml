@@ -49,10 +49,11 @@ jobs:
     - name: Find latest Qt Android version
       id: listqt
       run: |
-        # List only versions that actually exist for Android
-        AVAILABLE=$(python3 -m aqt list-qt linux android | grep -E '^6\.[0-9]+\.[0-9]+' | sort -Vr | head -n1)
+        # Extract only the first column (version), ignore architecture columns
+        AVAILABLE=$(python3 -m aqt list-qt linux android | awk '{print $1}' | grep -E '^6\.[0-9]+\.[0-9]+' | sort -Vr | head -n1)
         echo "latest_android_qt=$AVAILABLE" >> $GITHUB_OUTPUT
         echo "Latest Qt for Android: $AVAILABLE"
+
 
   
     - name: Install Qt Host (Linux Desktop)
