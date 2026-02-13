@@ -58,7 +58,7 @@ FPPhotoResponse::FPPhotoResponse(const QString& hash, const QSize& requestedSize
 {
     emit imageDownloadProgress(hash, 0, 0);
 
-    m_downloader = new lqt::Downloader(FPQmlUtils::photoUrl(hash), &m_data);
+    m_downloader = new FPDownloader(FPQmlUtils::photoUrl(hash), &m_data, this);
 
     // --- BEGIN SSL FIX FOR SELF-SIGNED CERTS ---
     // Try to hook into reply creation if lqt::Downloader exposes it
