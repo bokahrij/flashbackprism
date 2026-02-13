@@ -9,15 +9,17 @@ public:
         : lqt::Downloader(url, output, parent) {}
 
 protected:
-    void onReplyCreated(QNetworkReply *reply) override {
-        // Call base implementation if it exists
-        lqt::Downloader::onReplyCreated(reply);
+    void onStateChanged() override {
+        // Call base implementation
+        lqt::Downloader::onStateChanged();
 
-        // Accept self-signed certificates
-        QObject::connect(reply, &QNetworkReply::sslErrors,
-                         reply, [reply](const QList<QSslError> &errors) {
-            qWarning() << "Ignoring SSL errors:" << errors;
-            reply->ignoreSslErrors();
-        });
+        // When the reply is created, attach SSL handler
+        if (m_reply) {
+            QObject::connect(m_reply, &QNetworkReply::sslErrors,
+                             m_reply, [this](const QList<QSslError> &errors) {
+                qWarning() << "Ignoring SSL errors:" << errors;
+                m_reply->ignoreSslErrors();
+            });
+        }
     }
 };
