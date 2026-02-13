@@ -146,15 +146,11 @@ jobs:
         cd android-build
         make -j$(nproc)
 
-    - name: Deploy APK
+    - name: Deploy APK (Qt 6.7+)
       run: |
         cd android-build
-        BUILD_TYPE=$(echo "${{ github.event.inputs.build_type }}" | tr '[:upper:]' '[:lower:]')
-        $HOME/Qt/${{ steps.listqt.outputs.latest_android_qt }}/android_arm64_v8a/bin/androiddeployqt \
-          --input android-libflashbackprism.so-deployment-settings.json \
-          --output android-apk \
-          --$BUILD_TYPE \
-          --sign
+        cmake --build . --target apk
+
 
         
     - name: Upload Artifacts
